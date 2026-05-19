@@ -3,399 +3,521 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agile Maintenance & Technical Debt</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <title>Agile Plan Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #f5f0e8;
-      --ink: #1a1410;
-      --soft: #e8e0d0;
-      --rule: #c8bfaa;
-      --accent: #c0392b;
-      --accent2: #2c6e49;
-      --muted: #7a6f60;
-      --serif: 'Playfair Display', Georgia, serif;
-      --sans: 'DM Sans', sans-serif;
+      --bg: #080808;
+      --surface: #111;
+      --border: #222;
+      --text: #e8e8e8;
+      --muted: #555;
+      --accent: #a3e635;
+      --accent2: #f97316;
+      --sans: 'Syne', sans-serif;
+      --mono: 'Space Mono', monospace;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--ink);
-      font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.75;
+    body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+    header {
+      padding: 48px 6vw 36px;
+      border-bottom: 1px solid var(--border);
+      max-width: 860px;
+      margin: 0 auto;
     }
-    .masthead {
-      border-bottom: 3px double var(--rule);
-      padding: 20px 8vw 0;
-      text-align: center;
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 3px 10px;
+      display: inline-block;
+      margin-bottom: 20px;
     }
-    .masthead-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .tagline { color: var(--muted); font-size: 14px; font-family: var(--mono); }
+
+    main { max-width: 860px; margin: 0 auto; padding: 40px 6vw 80px; }
+
+    /* FORM */
+    .form-card {
+      border: 1px solid var(--border);
+      padding: 32px;
+      margin-bottom: 32px;
+      background: var(--surface);
+    }
+
+    .form-title {
       font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .form-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    input, textarea, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+    select option { background: #111; }
+
+    .generate-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .generate-btn:hover { background: #bef264; }
+    .generate-btn:disabled { background: #2a2a2a; color: var(--muted); cursor: not-allowed; }
+
+    /* OUTPUT */
+    #output { display: none; }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .output-header h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .output-header h2 span { color: var(--accent); }
+
+    /* SPRINT CARDS */
+    .sprints-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+
+    .sprint-card {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .sprint-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sprint-header:hover { background: #181818; }
+
+    .sprint-num {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    .sprint-name {
+      font-size: 14px;
+      font-weight: 700;
+      flex: 1;
+      margin: 0 14px;
+    }
+
+    .sprint-duration {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .sprint-body { padding: 16px 18px; display: none; }
+    .sprint-body.open { display: block; }
+
+    .task-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: #b0b0b0;
+      font-family: var(--mono);
+      line-height: 1.5;
+    }
+
+    .task-item::before {
+      content: '→';
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .sprint-goal {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-left: 2px solid var(--accent2);
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      background: rgba(249,115,22,0.05);
+    }
+
+    /* SUMMARY BOXES */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .summary-box {
+      border: 1px solid var(--border);
+      padding: 16px;
+      background: var(--surface);
+    }
+
+    .summary-label {
+      font-size: 10px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--rule);
-      margin-bottom: 36px;
+      font-family: var(--mono);
+      margin-bottom: 6px;
     }
-    .masthead-top span { color: var(--accent); font-weight: 500; }
-    .issue-label {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-    h1 {
-      font-family: var(--serif);
-      font-weight: 900;
-      font-size: clamp(2.4rem, 6vw, 4.8rem);
-      line-height: 1.08;
-      letter-spacing: -0.02em;
-      max-width: 820px;
-      margin: 0 auto 20px;
-      animation: fadeIn 0.8s ease both;
-    }
-    h1 em { font-style: italic; color: var(--accent); }
-    .deck {
-      font-family: var(--serif);
-      font-size: clamp(1rem, 1.8vw, 1.2rem);
-      color: var(--muted);
-      max-width: 580px;
-      margin: 0 auto 36px;
-      font-weight: 400;
-      animation: fadeIn 0.8s 0.15s ease both;
-    }
-    .masthead-rule {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 0;
-    }
-    .masthead-rule::before, .masthead-rule::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--rule);
-    }
-    .masthead-rule span {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 0 6vw 100px;
-    }
-    .article {
-      padding: 56px 0;
-      border-bottom: 1px solid var(--rule);
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 48px;
-      align-items: start;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.7s ease, transform 0.7s ease;
-    }
-    .article.visible { opacity: 1; transform: translateY(0); }
-    .article-meta { padding-top: 6px; position: sticky; top: 32px; }
-    .section-num {
-      font-family: var(--serif);
-      font-size: 3rem;
-      font-weight: 900;
-      color: var(--soft);
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-    .section-tag {
-      font-size: 10px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
+
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: 800;
       color: var(--accent);
-      font-weight: 500;
-      border-left: 2px solid var(--accent);
-      padding-left: 8px;
-      line-height: 1.4;
     }
-    .article-body h2 {
-      font-family: var(--serif);
-      font-weight: 700;
-      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-      line-height: 1.25;
-      margin-bottom: 20px;
-      letter-spacing: -0.01em;
-    }
-    .article-body p { color: #3a3028; margin-bottom: 18px; font-size: 15.5px; }
-    .article-body p:last-child { margin-bottom: 0; }
-    .pull-quote {
-      border-top: 2px solid var(--ink);
-      border-bottom: 1px solid var(--rule);
-      padding: 20px 0;
-      margin: 28px 0;
-      font-family: var(--serif);
-      font-size: clamp(1.05rem, 1.8vw, 1.25rem);
-      font-style: italic;
-      color: var(--ink);
-      line-height: 1.5;
-    }
-    .compare-table { width: 100%; border-collapse: collapse; margin: 28px 0; font-size: 14px; }
-    .compare-table th {
-      background: var(--ink);
-      color: var(--bg);
-      padding: 12px 16px;
-      text-align: left;
-      font-family: var(--sans);
-      font-weight: 500;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .compare-table th:first-child { width: 30%; }
-    .compare-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--rule);
-      vertical-align: top;
-      color: #3a3028;
-    }
-    .compare-table tr:nth-child(even) td { background: var(--soft); }
-    .compare-table td:first-child { font-weight: 500; color: var(--ink); }
-    .tag-agile {
-      display: inline-block;
-      background: var(--accent2);
-      color: white;
-      font-size: 10px;
-      padding: 2px 8px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-right: 4px;
-    }
-    .tag-trad {
-      display: inline-block;
-      background: var(--muted);
-      color: white;
-      font-size: 10px;
-      padding: 2px 8px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .debt-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1px;
-      background: var(--rule);
-      border: 1px solid var(--rule);
-      margin: 28px 0;
-    }
-    .debt-card { background: var(--bg); padding: 20px 18px; transition: background 0.2s; }
-    .debt-card:hover { background: var(--soft); }
-    .debt-card-label {
-      font-size: 10px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
-    .debt-card-title { font-family: var(--serif); font-weight: 700; font-size: 15px; margin-bottom: 8px; }
-    .debt-card-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
-    .backlog { background: var(--ink); color: var(--bg); padding: 28px; margin: 28px 0; }
-    .backlog-header {
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--rule);
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #333;
-    }
-    .backlog-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-      padding: 10px 0;
-      border-bottom: 1px solid #2a2a2a;
-      font-size: 14px;
-    }
-    .backlog-item:last-child { border-bottom: none; }
-    .priority {
-      font-size: 10px;
-      padding: 3px 8px;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-    .p-high { background: var(--accent); color: white; }
-    .p-med  { background: #e67e22; color: white; }
-    .p-low  { background: var(--accent2); color: white; }
-    .backlog-text { color: #d8d0c0; line-height: 1.5; }
-    .backlog-text strong { color: white; display: block; font-size: 14px; }
-    footer {
-      border-top: 3px double var(--rule);
+
+    .summary-sub { font-size: 12px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
+
+    /* LOADING */
+    .loading-box {
+      border: 1px solid var(--border);
+      padding: 48px 32px;
       text-align: center;
-      padding: 32px 6vw;
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
+      background: var(--surface);
+      display: none;
     }
-    footer span { color: var(--accent); }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
+
+    .loading-box.active { display: block; }
+
+    .loader {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 16px;
     }
-    @media (max-width: 680px) {
-      .article { grid-template-columns: 1fr; gap: 16px; }
-      .article-meta { position: static; }
-      .masthead-top { flex-direction: column; gap: 6px; text-align: center; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+    .loading-text span { color: var(--accent); }
+
+    .error-box {
+      border: 1px solid #7f1d1d;
+      background: rgba(127,29,29,0.15);
+      padding: 16px 20px;
+      color: #fca5a5;
+      font-family: var(--mono);
+      font-size: 13px;
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    .error-box.active { display: block; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
     }
   </style>
 </head>
 <body>
 
-  <header class="masthead">
-    <div class="masthead-top">
-      <span>Software Engineering</span>
-      <span>Agile vs Traditional Models</span>
-      <span>Academic Report</span>
+<header>
+  <div class="badge">// AI-Powered</div>
+  <h1>Agile Plan<br/><span>Generator</span></h1>
+  <p class="tagline">Enter your project → get a full AI-generated Agile plan</p>
+</header>
+
+<main>
+
+  <!-- INPUT FORM -->
+  <div class="form-card">
+    <div class="form-title">Project Details</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Project Name</label>
+        <input type="text" id="proj-name" placeholder="e.g. Online Food Ordering App"/>
+      </div>
+      <div class="form-group">
+        <label>Team Size</label>
+        <select id="team-size">
+          <option value="1-2">1–2 developers</option>
+          <option value="3-5" selected>3–5 developers</option>
+          <option value="6-10">6–10 developers</option>
+          <option value="10+">10+ developers</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Project Duration</label>
+        <select id="duration">
+          <option value="1 month">1 month</option>
+          <option value="2 months">2 months</option>
+          <option value="3 months" selected>3 months</option>
+          <option value="6 months">6 months</option>
+          <option value="1 year">1 year</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Project Type</label>
+        <select id="proj-type">
+          <option value="web app">Web App</option>
+          <option value="mobile app">Mobile App</option>
+          <option value="e-commerce">E-Commerce</option>
+          <option value="API / backend">API / Backend</option>
+          <option value="dashboard">Dashboard</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Project Description</label>
+        <textarea id="proj-desc" placeholder="Describe what the project does, who it's for, and any key features you need..."></textarea>
+      </div>
     </div>
-    <p class="issue-label">Topic Analysis</p>
-    <h1>Maintenance in <em>Agile</em> vs<br/>Traditional Models</h1>
-    <p class="deck">A structured look at how Agile handles software maintenance differently from traditional approaches — covering backlog management and technical debt control.</p>
-    <div class="masthead-rule" style="padding-bottom:28px;">
-      <span>Continues Below</span>
-    </div>
-  </header>
-
-  <div class="container">
-
-    <article class="article">
-      <div class="article-meta">
-        <div class="section-num">01</div>
-        <div class="section-tag">The Core<br/>Difference</div>
-      </div>
-      <div class="article-body">
-        <h2>How Maintenance is Handled in Agile vs Traditional Models</h2>
-        <p>In traditional software development models — like the Waterfall model — maintenance is treated as a separate, final phase that begins only after the software has been fully built and deployed. It is planned in advance, documented extensively, and usually handled by a dedicated maintenance team. Changes are expensive because they require going back through the entire process.</p>
-        <p>Agile methodology takes a completely different approach. Maintenance is not a phase — it is a continuous activity woven into every sprint. Teams regularly revisit, refactor, and improve existing code alongside building new features. This means the software is always being maintained, not just at the end.</p>
-        <div class="pull-quote">"In Agile, maintenance is not a conclusion — it is a constant conversation between the team and the software."</div>
-        <table class="compare-table">
-          <thead>
-            <tr>
-              <th>Aspect</th>
-              <th><span class="tag-agile">Agile</span></th>
-              <th><span class="tag-trad">Traditional</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Maintenance Timing</td><td>Continuous, every sprint</td><td>Post-deployment phase only</td></tr>
-            <tr><td>Response to Change</td><td>Fast — changes in next sprint</td><td>Slow — requires full change process</td></tr>
-            <tr><td>Team Responsibility</td><td>Same team maintains and builds</td><td>Separate maintenance team</td></tr>
-            <tr><td>Documentation</td><td>Lightweight, just enough</td><td>Heavy upfront documentation</td></tr>
-            <tr><td>Cost of Change</td><td>Lower — caught early</td><td>Higher — found late</td></tr>
-          </tbody>
-        </table>
-        <p>The key advantage of Agile maintenance is adaptability. When a user reports a bug or requests a change, it enters the product backlog and gets prioritized in the very next planning cycle. In traditional models, the same request might take months to go through approval, documentation, and implementation stages.</p>
-      </div>
-    </article>
-
-    <article class="article">
-      <div class="article-meta">
-        <div class="section-num">02</div>
-        <div class="section-tag">Backlog<br/>Management</div>
-      </div>
-      <div class="article-body">
-        <h2>Backlog Management in Agile</h2>
-        <p>The product backlog is the heart of Agile project management. It is a prioritized list of everything that needs to be done — new features, bug fixes, improvements, and maintenance tasks. Unlike traditional models where requirements are locked upfront, the backlog is a living document that evolves with the project.</p>
-        <p>Backlog management involves three key activities: creation, refinement, and prioritization. The Product Owner is responsible for maintaining the backlog and ensuring items are clearly written and properly ordered by business value. The development team then pulls items from the top of the backlog into each sprint.</p>
-        <div class="backlog">
-          <div class="backlog-header">// Sample Product Backlog — Sprint Planning View</div>
-          <div class="backlog-item">
-            <span class="priority p-high">HIGH</span>
-            <div class="backlog-text"><strong>Fix login session timeout bug</strong>Users are being logged out unexpectedly after 10 minutes of inactivity.</div>
-          </div>
-          <div class="backlog-item">
-            <span class="priority p-high">HIGH</span>
-            <div class="backlog-text"><strong>Refactor payment module</strong>Current code has grown too complex — needs to be split into smaller services.</div>
-          </div>
-          <div class="backlog-item">
-            <span class="priority p-med">MED</span>
-            <div class="backlog-text"><strong>Add dark mode to dashboard</strong>User-requested feature from last sprint review feedback.</div>
-          </div>
-          <div class="backlog-item">
-            <span class="priority p-med">MED</span>
-            <div class="backlog-text"><strong>Update third-party API integration</strong>Provider deprecated old endpoints — needs migration before Q3.</div>
-          </div>
-          <div class="backlog-item">
-            <span class="priority p-low">LOW</span>
-            <div class="backlog-text"><strong>Improve loading animation on mobile</strong>Minor UX improvement identified in user testing.</div>
-          </div>
-        </div>
-        <p>Backlog refinement — also called grooming — happens regularly before each sprint. The team reviews upcoming items, breaks large tasks into smaller ones, estimates effort, and clarifies requirements. This ensures that when sprint planning arrives, items are ready to be worked on without confusion.</p>
-        <p>The biggest strength of Agile backlog management over traditional models is that priorities can shift. If a critical bug is discovered, it can be placed at the top of the backlog and addressed in the very next sprint. In a traditional model, that same bug would have to go through a formal change request process first.</p>
-      </div>
-    </article>
-
-    <article class="article">
-      <div class="article-meta">
-        <div class="section-num">03</div>
-        <div class="section-tag">Technical<br/>Debt Control</div>
-      </div>
-      <div class="article-body">
-        <h2>Technical Debt and How Agile Controls It</h2>
-        <p>Technical debt refers to the accumulated cost of shortcuts, quick fixes, and suboptimal decisions made during development. Just like financial debt, it accrues interest — the longer it is ignored, the harder and more expensive it becomes to fix. Every time a developer writes messy code to meet a deadline, that is technical debt being added to the codebase.</p>
-        <div class="pull-quote">"Technical debt is not always bad — sometimes it is a deliberate tradeoff. The problem is when it is ignored until it becomes unmanageable."</div>
-        <div class="debt-grid">
-          <div class="debt-card">
-            <div class="debt-card-label">Type 01</div>
-            <div class="debt-card-title">Deliberate Debt</div>
-            <div class="debt-card-desc">Knowingly cutting corners to ship faster. Accepted as a tradeoff with a plan to fix later.</div>
-          </div>
-          <div class="debt-card">
-            <div class="debt-card-label">Type 02</div>
-            <div class="debt-card-title">Accidental Debt</div>
-            <div class="debt-card-desc">Bad decisions made without realizing it — often from inexperience or lack of knowledge at the time.</div>
-          </div>
-          <div class="debt-card">
-            <div class="debt-card-label">Type 03</div>
-            <div class="debt-card-title">Outdated Debt</div>
-            <div class="debt-card-desc">Code that was fine when written but has since become a problem as the system evolved around it.</div>
-          </div>
-          <div class="debt-card">
-            <div class="debt-card-label">Type 04</div>
-            <div class="debt-card-title">Bit Rot</div>
-            <div class="debt-card-desc">Code that degrades over time as dependencies update, standards change, and the environment shifts.</div>
-          </div>
-        </div>
-        <p>Agile manages technical debt through several practices. First, teams dedicate a portion of each sprint — typically 15 to 20 percent — specifically to refactoring and paying down debt. This prevents the problem from growing unchecked. Second, code reviews are built into the development process, catching poor practices before they are merged into the main codebase.</p>
-        <p>In traditional models, technical debt is rarely addressed proactively. Since there is no regular cycle of revisiting the code, debt accumulates silently throughout the project. By the time the maintenance phase begins, the codebase can be so heavily indebted that major rewrites are required rather than simple fixes.</p>
-        <p>Agile also uses tools like automated testing and continuous integration to surface debt early. If a change breaks something, the team knows immediately — not six months later when it has become deeply entangled with other parts of the system. This early detection is one of the most powerful weapons Agile has against technical debt.</p>
-        <div class="pull-quote">"The best time to pay off technical debt is before it doubles. Agile's sprint rhythm makes this possible by building repayment directly into the workflow."</div>
-        <p>Ultimately, the difference comes down to discipline and visibility. Agile makes technical debt visible through backlog items, sprint retrospectives, and metrics like code coverage. Traditional models tend to hide it until it becomes a crisis. Agile does not eliminate debt — but it gives teams the structure to manage it before it manages them.</p>
-      </div>
-    </article>
-
+    <button class="generate-btn" id="gen-btn" onclick="generatePlan()">Generate Agile Plan →</button>
   </div>
 
-  <footer>
-    <span>Agile Maintenance</span> — Backlog Management & Technical Debt Control
-  </footer>
+  <!-- LOADING -->
+  <div class="loading-box" id="loading-box">
+    <div class="loader"></div>
+    <div class="loading-text">Generating your <span>Agile plan</span>...</div>
+  </div>
 
-  <script>
-    const articles = document.querySelectorAll('.article');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.08 });
-    articles.forEach(a => observer.observe(a));
-  </script>
+  <!-- ERROR -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- OUTPUT -->
+  <div id="output">
+    <div class="output-header">
+      <h2>Your <span id="out-name">Project</span> Plan</h2>
+    </div>
+    <div class="summary-grid" id="summary-grid"></div>
+    <div class="sprints-grid" id="sprints-grid"></div>
+  </div>
+
+</main>
+
+<script>
+async function generatePlan() {
+  const name = document.getElementById('proj-name').value.trim();
+  const desc = document.getElementById('proj-desc').value.trim();
+  const team = document.getElementById('team-size').value;
+  const duration = document.getElementById('duration').value;
+  const type = document.getElementById('proj-type').value;
+
+  if (!name || !desc) {
+    showError('Please enter a project name and description.');
+    return;
+  }
+
+  setLoading(true);
+  hideError();
+  document.getElementById('output').style.display = 'none';
+
+  const prompt = `You are an expert Agile project manager. Generate a complete Agile plan for the following project.
+
+Project Name: ${name}
+Project Type: ${type}
+Team Size: ${team}
+Duration: ${duration}
+Description: ${desc}
+
+Return ONLY a valid JSON object with this exact structure, no extra text:
+{
+  "summary": {
+    "total_sprints": <number>,
+    "sprint_length": "2 weeks",
+    "team_size": "${team}",
+    "total_duration": "${duration}"
+  },
+  "sprints": [
+    {
+      "sprint_number": 1,
+      "name": "<sprint name>",
+      "goal": "<one sentence sprint goal>",
+      "tasks": ["<task 1>", "<task 2>", "<task 3>", "<task 4>"]
+    }
+  ]
+}
+
+Generate realistic sprints that cover: planning, design, development, testing, deployment, and maintenance. Each sprint should have 4-5 tasks. Make it specific to the project described.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'API error');
+    }
+
+    const text = data.content[0].text;
+    const clean = text.replace(/```json|```/g, '').trim();
+    const plan = JSON.parse(clean);
+
+    renderPlan(name, plan);
+
+  } catch (err) {
+    showError('Something went wrong: ' + err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderPlan(name, plan) {
+  document.getElementById('out-name').textContent = name;
+
+  // Summary boxes
+  const s = plan.summary;
+  document.getElementById('summary-grid').innerHTML = `
+    <div class="summary-box">
+      <div class="summary-label">Total Sprints</div>
+      <div class="summary-value">${s.total_sprints}</div>
+      <div class="summary-sub">sprints planned</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Sprint Length</div>
+      <div class="summary-value">2</div>
+      <div class="summary-sub">weeks each</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Team Size</div>
+      <div class="summary-value">${s.team_size.split('-')[0]}</div>
+      <div class="summary-sub">${s.team_size} devs</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-label">Duration</div>
+      <div class="summary-value">${s.total_duration.split(' ')[0]}</div>
+      <div class="summary-sub">${s.total_duration}</div>
+    </div>
+  `;
+
+  // Sprint cards
+  const container = document.getElementById('sprints-grid');
+  container.innerHTML = plan.sprints.map((sprint, i) => `
+    <div class="sprint-card">
+      <div class="sprint-header" onclick="toggleSprint(${i})">
+        <span class="sprint-num">SPRINT ${sprint.sprint_number}</span>
+        <span class="sprint-name">${sprint.name}</span>
+        <span class="sprint-duration">2 weeks</span>
+      </div>
+      <div class="sprint-body ${i === 0 ? 'open' : ''}" id="sprint-body-${i}">
+        <ul class="task-list">
+          ${sprint.tasks.map(t => `<li class="task-item">${t}</li>`).join('')}
+        </ul>
+        <div class="sprint-goal">Goal: ${sprint.goal}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('output').style.display = 'block';
+  document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleSprint(i) {
+  const body = document.getElementById('sprint-body-' + i);
+  body.classList.toggle('open');
+}
+
+function setLoading(active) {
+  document.getElementById('loading-box').classList.toggle('active', active);
+  document.getElementById('gen-btn').disabled = active;
+  document.getElementById('gen-btn').textContent = active ? 'Generating...' : 'Generate Agile Plan →';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-box');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('active');
+}
+
+function hideError() {
+  document.getElementById('error-box').classList.remove('active');
+}
+</script>
 
 </body>
 </html>
